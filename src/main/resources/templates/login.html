@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>登入 - 甜點商店</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.7.2/font/bootstrap-icons.css">
+    <style>
+        .form-container {
+            max-width: 500px;
+            margin: 2rem auto;
+            padding: 2rem;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            border-radius: 8px;
+        }
+        .form-header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+        .admin-section {
+            text-align: center;
+            margin-top: 2rem;
+            padding-top: 1.5rem;
+            border-top: 1px solid #eee;
+        }
+        .admin-link {
+            display: inline-block;
+            padding: 0.5rem 1.5rem;
+            color: #6c757d;
+            text-decoration: none;
+            border: 1px solid #6c757d;
+            border-radius: 20px;
+            transition: all 0.3s ease;
+        }
+        .admin-link:hover {
+            color: #fff;
+            background-color: #6c757d;
+            transform: translateY(-2px);
+        }
+        .admin-link i {
+            margin-right: 5px;
+        }
+    </style>
+</head>
+<body class="bg-light">
+    <div class="container">
+        <div class="form-container bg-white">
+            <div class="form-header">
+                <h2>會員登入</h2>
+                <p class="text-muted">歡迎回到甜點世界</p>
+            </div>
+
+            <div th:if="${param.error}" class="alert alert-danger" role="alert">
+                帳號或密碼錯誤
+            </div>
+            <div th:if="${param.registered}" class="alert alert-success" role="alert">
+                註冊成功，請登入
+            </div>
+
+            <form th:action="@{/login}" method="post">
+                <div class="mb-3">
+                    <label class="form-label">用戶名</label>
+                    <input type="text" name="username" class="form-control" required>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">密碼</label>
+                    <input type="password" name="password" class="form-control" required>
+                </div>
+                <div class="d-grid gap-2">
+                    <button type="submit" class="btn btn-primary">登入</button>
+                </div>
+                
+                <!-- 註冊連結 -->
+                <div class="text-center mt-3">
+                    尚未註冊會員？ <a th:href="@{/register}" class="text-primary">立即註冊</a>
+                </div>
+            </form>
+
+            <!-- 後台入口 -->
+            <div class="admin-section">
+                <form th:action="@{/login}" method="post" id="adminLoginForm">
+                    <input type="hidden" name="admin" value="true">
+                    <a href="#" class="admin-link" onclick="document.getElementById('adminLoginForm').submit(); return false;">
+                        <i class="bi bi-gear-fill"></i>
+                        後台管理入口
+                    </a>
+                </form>
+            </div>
+        </div>
+    </div>
+</body>
+</html> 

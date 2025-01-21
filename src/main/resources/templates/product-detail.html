@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>商品詳情</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootswatch@5.3.3/dist/minty/bootstrap.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+
+    <style>
+        body {
+            font-family: 'Roboto', sans-serif;
+            padding-top: 56px;
+            padding-bottom: 10px;
+        }
+        .d-flex {
+            display: flex;
+        }
+        .flex-column {
+            flex-direction: column;
+        }
+        .flex-fill {
+            flex: 1 0 auto; /* 填滿剩餘空間 */
+        }
+    </style>
+</head>
+<body class="d-flex flex-column min-vh-100">
+    <div th:replace="common.html :: navbar"></div>
+
+    <main class="flex-fill">
+        <div class="container mt-5">
+            <div class="row align-items-center">
+                <!-- 左側：圖片部分 -->
+                <div class="col-md-4 me-4">
+                    <img th:src="${product.imageUrl}" class="img-fluid rounded" alt="商品圖片">
+                </div>
+
+                <!-- 右側：文字內容部分 -->
+                <div class="col-md-7">
+                    <h2 th:text="${product.name}">商品名稱</h2>
+                    <p class="h4 text-danger" th:text="${'NT$ ' + product.price}">價格</p>
+                    <p th:text="${product.description}">商品描述</p>
+
+                    <form th:action="@{/cart/add}" method="post" class="mt-3">
+                        <input type="hidden" name="productId" th:value="${product.id}">
+                        <div class="mb-3">
+                            <label class="form-label">數量</label>
+                            <input type="number" name="quantity" class="form-control w-25" value="1" min="1">
+                        </div>
+                        <button type="submit" class="btn btn-primary">加入購物車</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <div th:replace="common.html :: footer"></div>
+</body>
+</html> 
