@@ -43,35 +43,38 @@
                 <!--                </ul>-->
 
                 <!-- 右側導航項目 -->
+                <span th:if="${username != null}">已登入</span>
+                <span th:if="${username == null}">未登入</span>
                 <ul class="navbar-nav align-items-center ms-auto">
-                    <!-- 已登入顯示用戶名稱和購物車 -->
-                    <li class="nav-item me-3" sec:authorize="isAuthenticated()">
+                    <!-- 已登入顯示用戶名稱和購物車、登出 -->
+                    <li class="nav-item me-3"th:if="${username != null}">
                             <span class="nav-link">
                                 <i class="bi bi-person-circle me-1"></i>
-                                <span sec:authentication="name"></span>
+                                <span th:text="${username}">用戶名</span>
                             </span>
                     </li>
-                    <li class="nav-item me-3" sec:authorize="isAuthenticated()">
+                    <li class="nav-item me-3" th:if="${username != null}">
                         <a class="nav-link cart-button text-white" href="/cart">
                             <i class="bi bi-cart-fill cart-icon"></i>
                             購物車
                         </a>
                     </li>
-                    <li class="nav-item" sec:authorize="isAuthenticated()">
+
+                    <li class="nav-item"  th:if="${username != null}">
                         <form th:action="@{/logout}" method="post" class="d-inline">
                             <button type="submit" class="btn btn-link nav-link text-white">
-                                <i class="bi bi-box-arrow-right me-1"></i>登出
+                                <i class="bi bi-box-arrow-right me-1"></i>
+                                登出
                             </button>
                         </form>
                     </li>
 
                     <!-- 未登入顯示登入和註冊按鈕 -->
-                    <li class="nav-item" sec:authorize="!isAuthenticated()">
+                    <li class="nav-item" th:if="${username == null}">
                         <a class="nav-link text-white" href="/login">
-                            <i class="bi bi-person me-1"></i>登入
-                        </a>
+                            <i class="bi bi-person me-1"></i>登入</a>
                     </li>
-                    <li class="nav-item" sec:authorize="!isAuthenticated()">
+                    <li class="nav-item" th:if="${username == null}">
                         <a class="nav-link text-white" href="/register">
                             <i class="bi bi-person-plus me-1"></i>註冊
                         </a>

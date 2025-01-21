@@ -1,13 +1,17 @@
 package com.dessert.controller;
 
 import com.dessert.dto.UserRegistrationDto;
+import com.dessert.security.JwtTokenUtil;
 import com.dessert.service.UserService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 import javax.validation.Valid;
 
@@ -15,10 +19,29 @@ import javax.validation.Valid;
 @RequiredArgsConstructor
 public class AuthController {
   private final UserService userService;
+  private final JwtTokenUtil jwtTokenUtil;
+  private final PasswordEncoder passwordEncoder;
 
   @GetMapping("/login")
   public String loginPage() {
     return "login";
+  }
+
+  @PostMapping("/login")
+  public String login(@RequestParam String username, @RequestParam String password, RedirectAttributes redirectAttributes) {
+    UserDetails userDetails = userService.loadUserByUsername(username);
+    if (passwordEncoder.matches(password, userDetails.getPassword())) {
+      String token = jwtTokenUtil.generateToken(userDetails.getUsername());
+
+      redirectAttributes.addFlashAttribute("token", token);
+      redirectAttributes.addFlashAttribute("username", userDetails.getUsername());
+      redirectAttributes.addFlashAttribute("message", "登入成功");
+      return "redirect:/"; // 登入成功後跳轉到首頁或其他頁面
+
+    } else {
+      redirectAttributes.addFlashAttribute("error", "Invalid username or password");
+      return "redirect:/login"; // 登入失敗後返回登入頁
+    }
   }
 
   @GetMapping("/register")

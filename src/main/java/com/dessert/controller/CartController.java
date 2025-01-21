@@ -2,6 +2,7 @@ package com.dessert.controller;
 
 import com.dessert.entity.User;
 import com.dessert.service.CartService;
+import com.dessert.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -13,6 +14,7 @@ import org.springframework.web.bind.annotation.*;
 @RequiredArgsConstructor
 public class CartController {
   private final CartService cartService;
+  private final UserService userService;
 
   @GetMapping("/cart")
   public String viewCart(Model model, @AuthenticationPrincipal User user) {
@@ -23,15 +25,11 @@ public class CartController {
   @PostMapping("/cart/add")
   @ResponseBody
   public String addToCart(@RequestParam Long productId,
-      @RequestParam Integer quantity,
-      @AuthenticationPrincipal User user) {
+      @RequestParam Integer quantity) {
     try {
-      System.out.println("Product ID...... " + productId);
-      System.out.println("Quantity...... " + quantity);
-      System.out.println("User...... " + user);
-      System.out.println("SecurityContext...... " + SecurityContextHolder.getContext().getAuthentication());
+      String username = SecurityContextHolder.getContext().getAuthentication().getName();
+      User user = userService.findByUsername(username);
       cartService.addToCart(user, productId, quantity);
-
       return "success";
 
     } catch (Exception e) {
