@@ -5,6 +5,7 @@
     <title>商品詳情</title>
     <link href="https://cdn.jsdelivr.net/npm/bootswatch@5.3.3/dist/minty/bootstrap.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
     <style>
         body {
@@ -54,5 +55,8 @@
     </main>
 
     <div th:replace="common.html :: footer"></div>
+
+    <script th:replace="common.html :: authorizationScript" defer></script>
+
 </body>
 </html> 

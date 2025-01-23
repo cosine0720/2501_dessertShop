@@ -13,6 +13,7 @@ import org.springframework.web.filter.OncePerRequestFilter;
 
 import javax.servlet.FilterChain;
 import javax.servlet.ServletException;
+import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
@@ -26,29 +27,24 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain chain)
             throws ServletException, IOException {
-        final String authorizationHeader = request.getHeader("Authorization");
-
-        String username = null;
+        String authorizationHeader = request.getHeader("Authorization");
         String token = null;
 
+        // 從 Authorization Header 或 Cookie 中提取 Token
         if (authorizationHeader != null && authorizationHeader.startsWith("Bearer ")) {
-            token = authorizationHeader.substring(7);
-            username = jwtTokenUtil.getUsernameFromToken(token);
-            System.out.println("-----JWT Token Validated for user: " + username); // 日誌
+            token = authorizationHeader.substring(7); // 提取 JWT
         }
 
-        if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
-            UserDetails userDetails = userService.loadUserByUsername(username);
+        if (token != null && SecurityContextHolder.getContext().getAuthentication() == null) {
+            String username = jwtTokenUtil.getUsernameFromToken(token);
 
-            if (jwtTokenUtil.validateToken(token)) {
+            if (username != null && jwtTokenUtil.validateToken(token)) {
+                UserDetails userDetails = userService.loadUserByUsername(username);
                 UsernamePasswordAuthenticationToken authentication =
                         new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
-                authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
                 SecurityContextHolder.getContext().setAuthentication(authentication);
-                System.out.println("-----User added to SecurityContext: " + username); // 日誌
             }
         }
-
         chain.doFilter(request, response);
     }
 }

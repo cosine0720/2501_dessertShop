@@ -6,6 +6,7 @@
     <title>療癒系甜點店</title>
     <link href="https://cdn.jsdelivr.net/npm/bootswatch@5.3.3/dist/minty/bootstrap.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
     <style>
         body {
@@ -28,10 +29,11 @@
     <nav class="navbar navbar-expand-lg navbar-light bg-primary fixed-top py-1">
         <div class="container">
             <!-- 左側：商店名稱 -->
-            <a class="navbar-brand fs-4 text-white" href="/">療癒系甜點</a>
+            <a class="navbar-brand fs-4 text-white" href="/">It's Alice Cafe</a>
 
             <!-- 手機版本的菜單按鈕 -->
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
+                    aria-controls="navbarNav" aria-expanded="false" aria-label="切換導航">
                 <span class="navbar-toggler-icon"></span>
             </button>
 
@@ -46,35 +48,33 @@
                 <span th:if="${username != null}">已登入</span>
                 <span th:if="${username == null}">未登入</span>
                 <ul class="navbar-nav align-items-center ms-auto">
-                    <!-- 已登入顯示用戶名稱和購物車、登出 -->
-                    <li class="nav-item me-3"th:if="${username != null}">
-                            <span class="nav-link">
-                                <i class="bi bi-person-circle me-1"></i>
-                                <span th:text="${username}">用戶名</span>
-                            </span>
+                    <!-- 已登入時顯示 -->
+                    <li class="loggedInNav nav-item me-3" style="display: none;">
+                        <span class="nav-link">
+                            <i class="bi bi-person-circle me-1"></i>
+                            <span id="usernameDisplay">用戶名</span>
+                        </span>
                     </li>
-                    <li class="nav-item me-3" th:if="${username != null}">
+                    <li class="loggedInNav nav-item me-3" style="display: none;">
                         <a class="nav-link cart-button text-white" href="/cart">
                             <i class="bi bi-cart-fill cart-icon"></i>
                             購物車
                         </a>
                     </li>
-
-                    <li class="nav-item"  th:if="${username != null}">
-                        <form th:action="@{/logout}" method="post" class="d-inline">
+                    <li class="loggedInNav nav-item" style="display: none;">
+                        <form id="logoutForm" action="/logout" method="post">
                             <button type="submit" class="btn btn-link nav-link text-white">
-                                <i class="bi bi-box-arrow-right me-1"></i>
-                                登出
+                                <i class="bi bi-box-arrow-right me-1"></i> 登出
                             </button>
                         </form>
                     </li>
 
-                    <!-- 未登入顯示登入和註冊按鈕 -->
-                    <li class="nav-item" th:if="${username == null}">
+                    <!-- 未登入時顯示 -->
+                    <li class="loggedOutNav nav-item" style="display: block;">
                         <a class="nav-link text-white" href="/login">
                             <i class="bi bi-person me-1"></i>登入</a>
                     </li>
-                    <li class="nav-item" th:if="${username == null}">
+                    <li class="loggedOutNav nav-item" style="display: block;">
                         <a class="nav-link text-white" href="/register">
                             <i class="bi bi-person-plus me-1"></i>註冊
                         </a>
@@ -86,10 +86,74 @@
 </div>
 
 <div th:fragment="footer">
+    <span th:text="'Token： ' + ${token}"></span>
     <footer class="text-center py-1 mt-4 bg-light text-success">
-        <p class="footer-text mb-0">&copy; 2025 療癒系甜點店 保留所有權利</p>
+        <p class="footer-text mb-0">&copy; 2025 用新台幣支持 療癒系甜點店</p>
     </footer>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+
 </div>
+
+<script th:fragment="authorizationScript" defer>
+    document.addEventListener("DOMContentLoaded", function () {
+        console.log("初始化用戶驗證...");
+
+        // 從 LocalStorage 中提取 JWT
+        const token = localStorage.getItem("jwtToken");
+
+        if (token) {
+            // 使用 Token 驗證用戶信息
+            fetch("/api/user", {
+                method: "GET",
+                headers: {
+                    "Authorization": `Bearer ${token}`,
+                },
+            })
+                .then((response) => {
+                    if (!response.ok) {
+                        throw new Error("用戶未認證或 Token 已過期");
+                    }
+                    return response.json();
+                })
+                .then((user) => {
+                    console.log("用戶信息: ", user);
+
+                    // 更新右上角用戶名和登入狀態
+                    document.querySelector("#usernameDisplay").textContent = user.username || "未知用戶";
+                    document.querySelectorAll(".loggedInNav").forEach((el) => (el.style.display = "block"));
+                    document.querySelectorAll(".loggedOutNav").forEach((el) => (el.style.display = "none"));
+                })
+                .catch((error) => {
+                    console.error(error.message);
+
+                    // Token 無效，清除並顯示未登入狀態
+                    localStorage.removeItem("jwtToken");
+                    document.querySelectorAll(".loggedInNav").forEach((el) => (el.style.display = "none"));
+                    document.querySelectorAll(".loggedOutNav").forEach((el) => (el.style.display = "block"));
+                });
+        } else {
+            console.log("JWT 不存在於 LocalStorage 中");
+
+            // 顯示未登入狀態
+            document.querySelectorAll(".loggedInNav").forEach((el) => (el.style.display = "none"));
+            document.querySelectorAll(".loggedOutNav").forEach((el) => (el.style.display = "block"));
+        }
+
+        // 登出按鈕邏輯
+        const logoutForm = document.querySelector("#logoutForm");
+        if (logoutForm) {
+            logoutForm.addEventListener("submit", function (event) {
+                event.preventDefault();
+
+                // 清除 LocalStorage 中的 JWT
+                localStorage.removeItem("jwtToken");
+                console.log("JWT 已清除");
+
+                // 跳轉到登入頁
+                window.location.href = "/login";
+            });
+        }
+    });
+</script>
+
 </body>
 </html>

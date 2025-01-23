@@ -6,6 +6,7 @@
     <title>購物車</title>
     <link href="https://cdn.jsdelivr.net/npm/bootswatch@5.3.3/dist/minty/bootstrap.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
     <style>
         body {
@@ -67,9 +68,11 @@
 
     <div th:replace="common.html :: footer"></div>
 
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script>
+    <script th:replace="common.html :: authorizationScript" defer></script>
+
+    <script defer>
         $(document).ready(function() {
+            // 更新數量的事件處理器
             $('.quantity-input').change(function() {
                 const id = $(this).data('id');
                 const quantity = $(this).val();
@@ -77,16 +80,18 @@
                     .fail(function() {
                         alert('更新數量失敗，請稍後再試');
                     });
+            });
 
+            // 刪除項目的事件處理器
             $('.remove-item').click(function() {
                 const id = $(this).data('id');
-                $.post('/cart/remove', {
-                    cartItemId: id
-                }).done(function() {
-                    location.reload();
-                }).fail(function() {
-                    alert('刪除失敗，請稍後再試');
-                });
+                $.post('/cart/remove', { cartItemId: id })
+                    .done(function() {
+                        location.reload();
+                    })
+                    .fail(function() {
+                        alert('刪除失敗，請稍後再試');
+                    });
             });
         });
     </script>

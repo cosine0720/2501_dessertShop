@@ -57,7 +57,7 @@
                 註冊成功，請登入
             </div>
 
-            <form th:action="@{/login}" method="post">
+            <form id="loginForm" th:action="@{/login}" method="post">
                 <div class="mb-3">
                     <label class="form-label">用戶名</label>
                     <input type="text" name="username" class="form-control" required>
@@ -88,5 +88,46 @@
             </div>
         </div>
     </div>
+    <script defer>
+        document.addEventListener("DOMContentLoaded", function () {
+            const loginForm = document.querySelector("#loginForm");
+
+            loginForm.addEventListener("submit", function (event) {
+                event.preventDefault();
+
+                // 獲取用戶輸入
+                const formData = new FormData(loginForm);
+                const username = formData.get("username");
+                const password = formData.get("password");
+
+                // 發送登入請求
+                fetch("/login", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/x-www-form-urlencoded",
+                    },
+                    body: `username=${encodeURIComponent(username)}&password=${encodeURIComponent(password)}`,
+                })
+                    .then((response) => {
+                        if (!response.ok) {
+                            throw new Error("登入失敗，請檢查帳號或密碼");
+                        }
+                        return response.json();
+                    })
+                    .then((data) => {
+                        // 儲存 JWT 到 LocalStorage
+                        localStorage.setItem("jwtToken", data.token);
+                        console.log("登入成功，Token 已保存到 LocalStorage");
+
+                        // 跳轉到首頁
+                        window.location.href = "/";
+                    })
+                    .catch((error) => {
+                        console.error(error.message);
+                        alert(error.message);
+                    });
+            });
+        });
+    </script>
 </body>
 </html> 
