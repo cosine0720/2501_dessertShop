@@ -1,20 +1,23 @@
 package com.dessert.controller;
 
 import com.dessert.dto.UserRegistrationDto;
-import com.dessert.security.JwtTokenUtil;
+import com.dessert.security.JwtUtil;
+import com.dessert.entity.User;
 import com.dessert.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
-import org.springframework.security.crypto.password.PasswordEncoder;
 
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletResponse;
@@ -26,7 +29,7 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class AuthController {
   private final UserService userService;
-  private final JwtTokenUtil jwtTokenUtil;
+  private final JwtUtil jwtUtil;
   private final PasswordEncoder passwordEncoder;
 
   @GetMapping("/login")
@@ -37,26 +40,33 @@ public class AuthController {
   @PostMapping("/login")
   @ResponseBody
   public ResponseEntity<?> login(@RequestParam String username, @RequestParam String password) {
-    UserDetails userDetails = userService.loadUserByUsername(username);
+    try {
+      User user = userService.findByUsername(username);
 
-    if (passwordEncoder.matches(password, userDetails.getPassword())) {
+      if (!passwordEncoder.matches(password, user.getPassword())) {
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid username or password");
+      }
+
+      UserDetails userDetails = userService.loadUserByUsername(username);
+
       // 生成 JWT Token
-      String token = jwtTokenUtil.generateToken(userDetails.getUsername());
+      String token = jwtUtil.generateToken(userDetails.getUsername());
 
-      // 確保返回 JSON 包含 token
+      // 返回 JSON
       Map<String, String> response = new HashMap<>();
       response.put("token", token);
       response.put("username", userDetails.getUsername());
       response.put("message", "登入成功");
+
       return ResponseEntity.ok(response);
-    } else {
+    } catch (BadCredentialsException e) {
       return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid username or password");
     }
   }
 
   @PostMapping("/logout")
   public String logout(HttpServletResponse response, RedirectAttributes redirectAttributes) {
-    // 創建一個過期的 Cookie 清除 JWT Token
+    // 清除 JWT Token 的 Cookie
     Cookie jwtCookie = new Cookie("jwtToken", null);
     jwtCookie.setHttpOnly(true);
     jwtCookie.setSecure(false);
@@ -66,25 +76,26 @@ public class AuthController {
 
     System.out.println("正在清除 jwtToken Cookie...");
 
-    // 添加成功消息
+    // 顯示登出成功訊息
     redirectAttributes.addFlashAttribute("message", "您已成功登出");
-    return "redirect:/login"; // 跳轉至登入頁面
+    return "redirect:/login";
   }
-
 
   @GetMapping("/register")
   public String registerPage(Model model) {
     if (!model.containsAttribute("userForm")) {
       model.addAttribute("userForm", new UserRegistrationDto());
     }
-    return "register";
+    return "register"; // 這將顯示 `register.html`
   }
 
   @PostMapping("/register")
-  public String register(@Valid @ModelAttribute("userForm") UserRegistrationDto userForm,
-      BindingResult bindingResult,
-      RedirectAttributes redirectAttributes,
-      Model model) {
+  public String register(
+          @Valid @ModelAttribute("userForm") UserRegistrationDto userForm,
+          BindingResult bindingResult,
+          RedirectAttributes redirectAttributes,
+          Model model) {
+
     // 檢查密碼是否匹配
     if (!userForm.getPassword().equals(userForm.getConfirmPassword())) {
       bindingResult.rejectValue("confirmPassword", "error.userForm", "密碼與確認密碼不匹配");
@@ -99,11 +110,12 @@ public class AuthController {
 
     try {
       userService.registerUser(
-          userForm.getUsername(),
-          userForm.getPassword(),
-          userForm.getEmail(),
-              "USER");
-      return "redirect:/login?registered";
+              userForm.getUsername(),
+              userForm.getPassword(),
+              userForm.getEmail(),
+              "USER"); // 預設角色為 USER
+
+      return "redirect:/login?registered"; // 註冊成功後導向登入頁
     } catch (Exception e) {
       model.addAttribute("error", "註冊過程中發生錯誤，請稍後再試");
       return "register";
@@ -113,11 +125,11 @@ public class AuthController {
   @GetMapping("/api/user")
   @ResponseBody
   public ResponseEntity<?> getCurrentUser() {
-    // 從 SecurityContext 中獲取當前用戶名
+    // 從 SecurityContext 取得目前用戶名稱
     String username = SecurityContextHolder.getContext().getAuthentication().getName();
     UserDetails userDetails = userService.loadUserByUsername(username);
 
-    // 返回用戶名及角色信息
+    // 回傳 JSON
     Map<String, Object> userInfo = new HashMap<>();
     userInfo.put("username", userDetails.getUsername());
     userInfo.put("roles", userDetails.getAuthorities());

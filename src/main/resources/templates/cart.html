@@ -71,28 +71,133 @@
     <script th:replace="common.html :: authorizationScript" defer></script>
 
     <script defer>
-        $(document).ready(function() {
-            // 更新數量的事件處理器
-            $('.quantity-input').change(function() {
-                const id = $(this).data('id');
-                const quantity = $(this).val();
-                $.post('/cart/update', { cartItemId: id, quantity: quantity })
-                    .fail(function() {
-                        alert('更新數量失敗，請稍後再試');
-                    });
-            });
+        console.log("--------script---------");
+        document.addEventListener("DOMContentLoaded", function () {
+            const token = localStorage.getItem("jwtToken");
 
-            // 刪除項目的事件處理器
-            $('.remove-item').click(function() {
-                const id = $(this).data('id');
-                $.post('/cart/remove', { cartItemId: id })
-                    .done(function() {
-                        location.reload();
+            if (!token) {
+                alert("您尚未登入，無法查看購物車");
+                window.location.href = "/login";
+                return;
+            }
+            fetch("/cart", {
+                method: "GET",
+                headers: {
+                    "Authorization": `Bearer ${token}`,
+                },
+            })
+                .then((response) => {
+                    if (response.status === 403) {
+                        alert("您無權限訪問購物車，請重新登入！");
+                        window.location.href = "/login";
+                        return;
+                    }
+                    if (!response.ok) {
+                        throw new Error("無法訪問購物車，可能需要重新登入");
+                    }
+                    return response.text();
+                })
+                .then((html) => {
+                    document.querySelector("main").innerHTML = html;
+                })
+                .catch((error) => {
+                    console.error("錯誤資訊:", error);
+
+                    if (error.message.includes("Failed to fetch")) {
+                        alert("網路異常，請檢查您的連線");
+                    } else if (error.message.includes("403")) {
+                        alert("您無權限訪問購物車，請重新登入！");
+                    } else {
+                        alert("訪問購物車失敗：" + error.message);
+                    }
+
+                    window.location.href = "/login";
+                });
+        });
+
+        // 更新數量的事件處理器
+        document.addEventListener("change", function(event) {
+            if (event.target.classList.contains("quantity-input")) {
+                const id = event.target.getAttribute("data-id");
+                const quantity = event.target.value;
+
+                fetch("/cart/update", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/x-www-form-urlencoded",
+                    },
+                    body: `cartItemId=${id}&quantity=${quantity}`
+                })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.status === "success") {
+                            location.reload();
+                        } else {
+                            alert("更新數量失敗：" + data.message);
+                        }
                     })
-                    .fail(function() {
-                        alert('刪除失敗，請稍後再試');
+                    .catch(error => {
+                        alert("更新數量失敗，請稍後再試");
+                        console.error(error);
                     });
-            });
+            }
+        });
+
+        // 刪除項目的事件處理器
+        document.addEventListener("click", function(event) {
+            if (event.target.classList.contains("remove-item")) {
+                const id = event.target.getAttribute("data-id");
+
+                fetch("/cart/remove", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/x-www-form-urlencoded",
+                    },
+                    body: `cartItemId=${id}`
+                })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.status === "success") {
+                            location.reload();
+                        } else {
+                            alert("刪除失敗：" + data.message);
+                        }
+                    })
+                    .catch(error => {
+                        alert("刪除失敗，請稍後再試");
+                        console.error(error);
+                    });
+            }
+        });
+
+        // 加入購物車的事件處理器
+        document.addEventListener("click", function(event) {
+            if (event.target.classList.contains("add-to-cart")) {
+                event.preventDefault();
+                const productId = event.target.getAttribute("data-id");
+                const quantity = document.getElementById("quantity");
+
+                fetch("/cart/add", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/x-www-form-urlencoded",
+                    },
+                    body: `productId=${productId}&quantity=${quantity}`
+                })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.status === "success") {
+                            alert(data.message);
+                            location.reload();
+                        } else {
+                            alert("加入購物車失敗：" + data.message);
+                        }
+                    })
+                    .catch(error => {
+                        alert("加入購物車時發生錯誤");
+                        console.error(error);
+                    });
+            }
         });
     </script>
 </body>

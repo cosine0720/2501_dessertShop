@@ -45,8 +45,6 @@
                 <!--                </ul>-->
 
                 <!-- 右側導航項目 -->
-                <span th:if="${username != null}">已登入</span>
-                <span th:if="${username == null}">未登入</span>
                 <ul class="navbar-nav align-items-center ms-auto">
                     <!-- 已登入時顯示 -->
                     <li class="loggedInNav nav-item me-3" style="display: none;">
@@ -86,7 +84,6 @@
 </div>
 
 <div th:fragment="footer">
-    <span th:text="'Token： ' + ${token}"></span>
     <footer class="text-center py-1 mt-4 bg-light text-success">
         <p class="footer-text mb-0">&copy; 2025 用新台幣支持 療癒系甜點店</p>
     </footer>
