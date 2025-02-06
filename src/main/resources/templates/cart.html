@@ -1,6 +1,5 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org"
-      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<html xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
     <title>購物車</title>
@@ -22,6 +21,9 @@
         }
         .flex-fill {
             flex: 1 0 auto; /* 填滿剩餘空間 */
+        }
+        footer {
+            flex-shrink: 0; /* 防止 footer 壓縮 */
         }
     </style>
 </head>
@@ -66,9 +68,10 @@
         </div>
     </main>
 
-    <div th:replace="common.html :: footer"></div>
-
-    <script th:replace="common.html :: authorizationScript" defer></script>
+    <div th:with="notAlreadyRendered=true">
+        <div th:replace="common.html :: footer" th:if="${notAlreadyRendered}"></div>
+    </div>
+    <script th:replace="common.html :: authorizationScript"></script>
 
     <script defer>
         console.log("--------script---------");
@@ -80,7 +83,7 @@
                 window.location.href = "/login";
                 return;
             }
-            fetch("/cart", {
+            fetch("/cart/content", {
                 method: "GET",
                 headers: {
                     "Authorization": `Bearer ${token}`,
@@ -98,7 +101,16 @@
                     return response.text();
                 })
                 .then((html) => {
-                    document.querySelector("main").innerHTML = html;
+                    if (!html) return;
+                    const parser = new DOMParser();
+                    const doc = parser.parseFromString(html, "text/html");
+                    const mainContent = doc.querySelector("div.container"); // 只抓購物車內容
+
+                    console.log("mainContent...." + mainContent);
+
+                    if (mainContent) {
+                        document.querySelector("main").innerHTML = mainContent.outerHTML;
+                    }
                 })
                 .catch((error) => {
                     console.error("錯誤資訊:", error);

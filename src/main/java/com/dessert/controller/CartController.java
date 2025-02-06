@@ -25,11 +25,20 @@ public class CartController {
   public String viewCart(Model model) {
     String username = SecurityContextHolder.getContext().getAuthentication().getName();
     User user = userService.findByUsername(username);
-    System.out.println("viewCart======user======" + user);
 
     model.addAttribute("cartItems", cartService.getCartItems(user));
     return "cart";
   }
+
+  @GetMapping("/cart/content")
+  public String viewCartContent(Model model) {
+    String username = SecurityContextHolder.getContext().getAuthentication().getName();
+    User user = userService.findByUsername(username);
+
+    model.addAttribute("cartItems", cartService.getCartItems(user));
+    return "fragments/cart-content";  // 只返回購物車內容
+  }
+
 
   @PostMapping("/cart/add")
   @ResponseBody
