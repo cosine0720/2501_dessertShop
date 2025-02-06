@@ -12,6 +12,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
+import java.security.Principal;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -42,23 +43,30 @@ public class CartController {
 
   @PostMapping("/cart/add")
   @ResponseBody
-  public ResponseEntity<Map<String, String>> addToCart(@RequestParam Long productId,
-      @RequestParam Integer quantity) {
-    Map<String, String> response = new HashMap<>();
+  public ResponseEntity<?> addToCart(@RequestBody Map<String, Object> payload, Principal principal) {
+    System.out.println("productId......" + payload.get("productId"));
+    System.out.println("quantity......" + payload.get("quantity"));
 
+    // 確保 Principal 正確解析
+    if (principal == null) {
+      return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("message", "請先登入"));
+    }
+
+    // 確保 productId 和 quantity 存在
+    if (!payload.containsKey("productId") || !payload.containsKey("quantity")) {
+      return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("message", "請提供商品 ID 和數量"));
+    }
+
+    // 確保數據類型正確
     try {
-      String username = SecurityContextHolder.getContext().getAuthentication().getName();
-      User user = userService.findByUsername(username);
-      cartService.addToCart(user, productId, quantity);
+      Long productId = Long.parseLong(payload.get("productId").toString());
+      int quantity = Integer.parseInt(payload.get("quantity").toString());
+      String username = principal.getName();
 
-      response.put("status", "success");
-      response.put("message", "商品已成功加入購物車");
-      return ResponseEntity.ok(response);
-
-    } catch (Exception e) {
-      response.put("status", "error");
-      response.put("message", e.getMessage());
-      return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+      cartService.addToCart(username, productId, quantity);
+      return ResponseEntity.ok(Map.of("message", "商品已加入購物車"));
+    } catch (NumberFormatException e) {
+      return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("message", "數據格式不正確"));
     }
   }
 }

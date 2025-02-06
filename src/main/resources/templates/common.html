@@ -152,5 +152,32 @@
     });
 </script>
 
+<script th:fragment="cartScript" defer>
+    document.addEventListener("DOMContentLoaded", function () {
+        document.querySelectorAll(".add-to-cart").forEach(button => {
+            button.addEventListener("click", function () {
+                let productId = this.getAttribute("data-id");
+                let quantity = this.parentElement.querySelector('input[name="quantity"]').value;
+
+                fetch("/cart/add", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({
+                        productId: productId,
+                        quantity: quantity
+                    })
+                })
+                    .then(response => response.json())
+                    .then(data => {
+                        alert(data.message);
+                    })
+                    .catch(error => console.error("Error:", error));
+            });
+        });
+    });
+</script>
+
 </body>
 </html>
