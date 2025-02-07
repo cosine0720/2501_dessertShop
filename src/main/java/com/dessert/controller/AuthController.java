@@ -66,7 +66,6 @@ public class AuthController {
   public String logout(HttpServletResponse response, RedirectAttributes redirectAttributes) {
     // 清除 SecurityContext
     SecurityContextHolder.clearContext();
-    System.out.println("SecurityContext cleared..." + (SecurityContextHolder.getContext().getAuthentication() == null));
 
     // 清除 JWT Token 的 Cookie
     Cookie jwtCookie = new Cookie("jwtToken", null);

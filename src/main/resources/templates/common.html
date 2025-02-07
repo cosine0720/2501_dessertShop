@@ -111,7 +111,9 @@
             })
                 .then((response) => {
                     if (!response.ok) {
-                        throw new Error("用戶未認證或 Token 已過期");
+                        console.log("Token 可能已經失效，清除 localStorage");
+                        localStorage.removeItem("jwtToken");
+                        window.location.href = "/login";
                     }
                     return response.json();
                 })
@@ -148,7 +150,6 @@
 
                 // 清除 LocalStorage 中的 JWT
                 localStorage.removeItem("jwtToken");
-                alert("正在登出，清除 JWT...");
                 console.log("JWT 已清除");
 
                 // 跳轉到登入頁
