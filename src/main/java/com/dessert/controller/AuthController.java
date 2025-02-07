@@ -66,14 +66,18 @@ public class AuthController {
 
   @PostMapping("/logout")
   public String logout(HttpServletResponse response, RedirectAttributes redirectAttributes) {
+    // 清除 SecurityContext
+    SecurityContextHolder.clearContext();
+    System.out.println("SecurityContext cleared..." + (SecurityContextHolder.getContext().getAuthentication() == null));
+
     // 清除 JWT Token 的 Cookie
     Cookie jwtCookie = new Cookie("jwtToken", null);
     jwtCookie.setHttpOnly(true);
-    jwtCookie.setSecure(false);
     jwtCookie.setPath("/");
     jwtCookie.setMaxAge(0); // 設置 Cookie 為立即過期
     response.addCookie(jwtCookie);
 
+    System.out.println("==========================");
     System.out.println("正在清除 jwtToken Cookie...");
 
     // 顯示登出成功訊息

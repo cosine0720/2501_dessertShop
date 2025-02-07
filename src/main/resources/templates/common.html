@@ -69,6 +69,9 @@
 
                     <!-- 未登入時顯示 -->
                     <li class="loggedOutNav nav-item" style="display: block;">
+                        Hi, 請先
+                    </li>
+                    <li class="loggedOutNav nav-item" style="display: block;">
                         <a class="nav-link text-white" href="/login">
                             <i class="bi bi-person me-1"></i>登入</a>
                     </li>
@@ -96,6 +99,7 @@
 
         // 從 LocalStorage 中提取 JWT
         const token = localStorage.getItem("jwtToken");
+        console.log("token: " + token);
 
         if (token) {
             // 使用 Token 驗證用戶信息
@@ -112,10 +116,11 @@
                     return response.json();
                 })
                 .then((user) => {
+                    console.log("當前 JWT 使用者: ", user.username);
                     console.log("用戶信息: ", user);
 
                     // 更新右上角用戶名和登入狀態
-                    document.querySelector("#usernameDisplay").textContent = user.username || "未知用戶";
+                    document.querySelector("#usernameDisplay").textContent = "Hi! " + user.username || "未知用戶";
                     document.querySelectorAll(".loggedInNav").forEach((el) => (el.style.display = "block"));
                     document.querySelectorAll(".loggedOutNav").forEach((el) => (el.style.display = "none"));
                 })
@@ -143,6 +148,7 @@
 
                 // 清除 LocalStorage 中的 JWT
                 localStorage.removeItem("jwtToken");
+                alert("正在登出，清除 JWT...");
                 console.log("JWT 已清除");
 
                 // 跳轉到登入頁

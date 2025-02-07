@@ -32,11 +32,12 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         final String token = authHeader.substring(7);
         final String username = jwtUtil.extractUsername(token);
 
-        if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
+        if (username != null) {
             UserService userService = ApplicationContextProvider.getBean(UserService.class); // 動態獲取 Bean
             UserDetails userDetails = userService.loadUserByUsername(username);
 
             if (jwtUtil.validateToken(token, userDetails.getUsername())) {
+                System.out.println("JWT 驗證成功，設定 SecurityContext 為: " + username);
                 SecurityContextHolder.getContext().setAuthentication(
                         new org.springframework.security.authentication.UsernamePasswordAuthenticationToken(
                                 userDetails, null, userDetails.getAuthorities()
