@@ -161,6 +161,7 @@
 
 <script th:fragment="cartScript" defer>
     document.addEventListener("DOMContentLoaded", function () {
+        // 加入購物車
         document.querySelectorAll(".add-to-cart").forEach(button => {
             button.addEventListener("click", function () {
                 let productId = this.getAttribute("data-id");
@@ -184,6 +185,8 @@
             });
         });
     });
+
+
 </script>
 
 </body>

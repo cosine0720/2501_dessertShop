@@ -67,4 +67,21 @@ public class CartController {
       return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("message", "數據格式不正確"));
     }
   }
+
+  @PutMapping("/cart/update")
+  @ResponseBody
+  public ResponseEntity<?> updateCart(@RequestBody Map<String, Object> payload, Principal principal) {
+    System.out.println("-------payload......" + payload);
+    System.out.println("-------quantity......" + payload.get("quantity"));
+
+    try {
+      Long cartItemId = Long.parseLong(payload.get("cartItemId").toString());
+      int quantity = Integer.parseInt(payload.get("quantity").toString());
+
+      cartService.updateQuantity(cartItemId, quantity);
+      return ResponseEntity.ok(Map.of("message", "已更新商品數量！"));
+    } catch (NumberFormatException e) {
+      return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("message", "數據格式不正確"));
+    }
+  }
 }

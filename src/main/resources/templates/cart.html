@@ -53,7 +53,7 @@
                                        th:data-id="${item.id}" class="form-control quantity-input"
                                        min="1" style="width: 80px;">
                             </td>
-                            <td th:text="${'NT$ ' + item.product.price.multiply(new java.math.BigDecimal(item.quantity))}"></td>
+                            <td class="subtotal" th:text="${'NT$ ' + item.product.price.multiply(new java.math.BigDecimal(item.quantity))}"></td>
                             <td>
                                 <button class="btn btn-danger btn-sm remove-item"
                                         th:data-id="${item.id}">刪除</button>
@@ -74,7 +74,6 @@
     <script th:replace="common.html :: authorizationScript"></script>
 
     <script defer>
-        console.log("--------script---------");
         document.addEventListener("DOMContentLoaded", function () {
             const token = localStorage.getItem("jwtToken");
 
@@ -127,33 +126,7 @@
                 });
         });
 
-        // 更新數量的事件處理器
-        document.addEventListener("change", function(event) {
-            if (event.target.classList.contains("quantity-input")) {
-                const id = event.target.getAttribute("data-id");
-                const quantity = event.target.value;
 
-                fetch("/cart/update", {
-                    method: "POST",
-                    headers: {
-                        "Content-Type": "application/x-www-form-urlencoded",
-                    },
-                    body: `cartItemId=${id}&quantity=${quantity}`
-                })
-                    .then(response => response.json())
-                    .then(data => {
-                        if (data.status === "success") {
-                            location.reload();
-                        } else {
-                            alert("更新數量失敗：" + data.message);
-                        }
-                    })
-                    .catch(error => {
-                        alert("更新數量失敗，請稍後再試");
-                        console.error(error);
-                    });
-            }
-        });
 
         // 刪除項目的事件處理器
         document.addEventListener("click", function(event) {
@@ -182,33 +155,33 @@
             }
         });
 
-        // 加入購物車的事件處理器
-        document.addEventListener("click", function(event) {
-            if (event.target.classList.contains("add-to-cart")) {
-                event.preventDefault();
-                const productId = event.target.getAttribute("data-id");
-                const quantity = document.getElementById("quantity");
+        // 更新數量
+        document.addEventListener("change", function(event) {
+            if (event.target.classList.contains("quantity-input")) {
+                const cartItemId = event.target.getAttribute("data-id");
+                const quantity = event.target.value;
 
-                fetch("/cart/add", {
-                    method: "POST",
+                if (quantity < 1) {
+                    event.target.value = 1; // 防止數量小於 1
+                    return;
+                }
+
+                fetch("/cart/update", {
+                    method: "PUT",
                     headers: {
-                        "Content-Type": "application/x-www-form-urlencoded",
+                        "Content-Type": "application/json",
                     },
-                    body: `productId=${productId}&quantity=${quantity}`
+                    body: JSON.stringify({
+                        cartItemId: cartItemId,
+                        quantity: quantity
+                    }),
                 })
                     .then(response => response.json())
                     .then(data => {
-                        if (data.status === "success") {
-                            alert(data.message);
-                            location.reload();
-                        } else {
-                            alert("加入購物車失敗：" + data.message);
-                        }
+                        alert(data.message);
+                        location.reload();
                     })
-                    .catch(error => {
-                        alert("加入購物車時發生錯誤");
-                        console.error(error);
-                    });
+                    .catch(error => console.error("Error:", error));
             }
         });
     </script>
