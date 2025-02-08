@@ -50,7 +50,12 @@ public class CartService {
     cartItemRepository.save(cartItem);
   }
 
-  public void removeFromCart(Long cartItemId) {
-    cartItemRepository.deleteById(cartItemId);
+  public void removeCartItem(String username, Long cartItemId) {
+    User user = userRepository.findByUsername(username).orElseThrow(() -> new UsernameNotFoundException("用戶不存在"));
+    cartItemRepository.findById(cartItemId).ifPresent(cartItem -> {
+      if (cartItem.getUser().equals(user)) {
+        cartItemRepository.delete(cartItem);
+      }
+    });
   }
 }

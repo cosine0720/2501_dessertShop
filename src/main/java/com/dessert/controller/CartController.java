@@ -84,4 +84,25 @@ public class CartController {
       return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("message", "數據格式不正確"));
     }
   }
+
+  @DeleteMapping("/cart/remove")
+  @ResponseBody
+  public ResponseEntity<?> removeCartItem(@RequestBody Map<String, Object> payload, Principal principal) {
+    System.out.println("要刪除的商品 ID: " + payload.get("cartItemId"));
+
+    try {
+      Long cartItemId = Long.parseLong(payload.get("cartItemId").toString());
+
+      // 取得當前登入的用戶
+      if (principal == null) {
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("message", "請先登入"));
+      }
+      String username = principal.getName();
+      cartService.removeCartItem(username, cartItemId);
+
+      return ResponseEntity.ok(Map.of("message", "商品已從購物車移除"));
+    } catch (NumberFormatException e) {
+      return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("message", "無效的商品 ID"));
+    }
+  }
 }
